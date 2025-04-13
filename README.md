@@ -8,6 +8,7 @@ The application provides a user-friendly interface for generating PGP key pairs,
 ---
 
 ## **Features**
+NOTE: Email functionality is not fully implemented yet. This is only useful for managing keys, and encrypting/decrypting messages currently
 1. **PGP Key Management**:
    - Generate PGP key pairs with email addresses and passphrases.
    - List all public keys and their fingerprints.
