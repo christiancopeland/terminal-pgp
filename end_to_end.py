@@ -3,13 +3,12 @@ import getpass
 import os
 import logging
 from io import StringIO
-
 from textual.app import App, ComposeResult
 from textual.widgets import Button, Header, Footer, Input, Label, TextArea
 from textual.reactive import reactive
 from textual.containers import Vertical, VerticalScroll, Horizontal
 
-
+# Internal Imports
 from encrypt_utils import generate_key_pair, decrypt_message, encrypt_and_sign_message
 
 
@@ -21,21 +20,9 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)  # Create a logger instance
 
-
-
-
-
-
-
-def get_key(email):
-    pass
-
-
 class PGPApp(App):
     """A Textual-based terminal front end for your PGP project."""
-
     CSS_PATH = "./styles.css"
-
     # Reactive attributes for tracking mode
     mode = reactive("output")
 
@@ -50,7 +37,6 @@ class PGPApp(App):
             Button("Delete Key", id="delete-key"),
             Button("Encrypt Message", id="encrypt"),
             Button("Decrypt Message", id="decrypt"),
-
             id="buttons-container",
             classes="buttons-row",  # Add CSS class for styling
         )
@@ -58,20 +44,7 @@ class PGPApp(App):
         yield TextArea(id="output", text="")
         yield Footer()
 
-    # def on_mount(self):
-    #     """Add buttons to the buttons container."""
-    #     buttons_container = self.query_one("#buttons-container")
-    #     buttons_container.mount(Button("Generate Key Pair", id="generate-key"))
-    #     buttons_container.mount(Button("Encrypt Message", id="encrypt"))
-    #     buttons_container.mount(Button("Decrypt Message", id="decrypt"))
-    #     logger.info("Application mounted successfully")
-
-    def watch_mode(self, mode: str):
-        """Update input fields dynamically when the mode is changed."""
-        input_container = self.query_one("#input-container")
-        input_container.remove_children()
-        logger.info(f"Switched mode to: {mode}")
-
+    def check_modes(mode: str):
         if mode == "generate-key":
             input_container.mount(Input(placeholder="Enter Email", id="keygen-email"))
             input_container.mount(Input(placeholder="Enter Passphrase", password=True, id="keygen-pass"))
@@ -83,8 +56,8 @@ class PGPApp(App):
             input_container.mount(Input(placeholder="Enter Message to Encrypt", id="encrypt-message"))
             input_container.mount(Button("Submit", id="submit-encrypt"))
         elif mode == "decrypt":
-            input_container.mount(TextArea(name="Enter Encrypted Message", id="decrypt-message"))
-            input_container.mount(Input(placeholder="Enter Decryption Passphrase", password=True, id="decrypt-pass"))
+            input_container.mount(TextArea(text="<DELETE THIS. Enter Encrypted Message>", id="decrypt-message",))
+            input_container.mount(Input(placeholder="Enter Decryption Passphrase of Recipient", password=True, id="decrypt-pass"))
             input_container.mount(Button("Submit", id="submit-decrypt"))
         elif mode == "delete-key":
             input_container.mount(Input(placeholder="Enter Fingerprint to Delete", id="delete-fingerprint"))
@@ -98,9 +71,15 @@ class PGPApp(App):
         
         input_container.refresh()
 
-    async def on_button_pressed(self, event: Button.Pressed) -> None:
-        """Handle mode selection and submission buttons."""
-        logger.info(f"Button pressed: {event.button.id}")
+    def watch_mode(self, mode: str):
+        """Update input fields dynamically when the mode is changed."""
+        input_container = self.query_one("#input-container")
+        input_container.remove_children()
+        logger.info(f"Switched mode to: {mode}")
+        self.check_modes(mode)
+        
+
+    async def case_match_buttons(self, event: Button.Pressed):
         match event.button.id:
             case "generate-key":
                 self.mode = "generate-key"
@@ -125,6 +104,12 @@ class PGPApp(App):
                 await self.handle_delete_key()
             case "submit-update-key":
                 await self.handle_update_key()
+
+    async def on_button_pressed(self, event: Button.Pressed) -> None:
+        """Handle mode selection and submission buttons."""
+        logger.info(f"Button pressed: {event.button.id}")
+        await self.case_match_buttons(event)
+        
 
     async def handle_generate_key(self):
         """Generate a key pair."""
@@ -164,19 +149,19 @@ class PGPApp(App):
         try:
             # Delete the secret (private) key
             secret_result = gpg.delete_keys(fingerprint, secret=True, passphrase=passphrase)
+            
             if not secret_result:
                 raise Exception(f"Failed to delete the secret key with fingerprint: {fingerprint}")
             logger.info(f"Secret key deleted for fingerprint: {fingerprint}")
 
             # Delete the public key
             public_result = gpg.delete_keys(fingerprint, secret=False, passphrase=passphrase)
+            
             if not public_result:
                 raise Exception(f"Failed to delete the public key with fingerprint: {fingerprint}")
             logger.info(f"Public key deleted for fingerprint: {fingerprint}")
             
             self.query_one("#output", TextArea).text = f"Key deleted successfully: {fingerprint}"
-
-
 
         except Exception as e:
             logger.error(f"Error deleting key: {e}")
@@ -193,8 +178,6 @@ class PGPApp(App):
         try:
             # Enable loopback for pinentry
             gpg.options = ["--pinentry-mode", "loopback"]
-
-
             # Sequence of commands for interactive --edit-key
             commands = [
                 "passwd",  # Enter passphrase change mode
@@ -203,24 +186,19 @@ class PGPApp(App):
                 new_passphrase,  # Confirm the new passphrase
                 "save",  # Save the changes
             ]
-
             # Join commands with newlines for interactive input simulation
             command_input = StringIO("\n".join(commands) + "\n")
-
             results = any
-
             # Call GPG's handle_io to execute the command sequence
             result = gpg._handle_io(["--command-fd", "0", "--status-fd", "2", "--edit-key", fingerprint],
                 StringIO(u'\n'.join(commands)), results
             )
-
             # Check the result for success
             if "gpg: success" in result.stderr:
                 logger.info(f"Passphrase updated successfully for key: {fingerprint}")
                 self.query_one("#output", TextArea).text = f"Passphrase updated successfully for key: {fingerprint}"
             else:
                 raise Exception("Failed to update the passphrase. Please check the logs for details.")
-
         except Exception as e:
             logger.error(f"Error updating key passphrase: {e}")
             self.query_one("#output", TextArea).text = f"Error: {e}"
@@ -253,7 +231,7 @@ class PGPApp(App):
             self.query_one("#output", TextArea).text = f"Error: {e}"
 
 # WORK IN PROGRESS, DEFINITELY DOES NOT WORK RIGHT NOW
-async def handle_send_protonmail(self):
+    async def handle_send_protonmail(self):
         """Send an encrypted email via ProtonMail."""
         sender_email = self.query_one("#sender-email", Input).value
         sender_passphrase = self.query_one("#sender-passphrase", Input).value
@@ -294,7 +272,6 @@ async def handle_send_protonmail(self):
 
 
 
-
 if __name__ == '__main__':
 
     # Setup directory for keys
@@ -304,30 +281,3 @@ if __name__ == '__main__':
 
     app = PGPApp()
     app.run()
-
-
-
-
-
-    # # Generate keys 
-    # alice_pass = getpass.getpass("Alice's passphrase: ")
-    # alice_key = generate_key_pair("alice@example.com", alice_pass)
-    # print(alice_key.fingerprint)
-    
-    # bob_pass = getpass.getpass("Bob's passphrase: ")
-    # bob_key = generate_key_pair("bob@example.com", bob_pass)
-    # print(bob_key.fingerprint)
-
-    # print("All keys in keyring:", gpg.list_keys())
-
-    # # Encrypt and sign using FINGERPRINTS 
-    # encrypted = encrypt_and_sign_message(
-    #     sender_fingerprint=alice_key.fingerprint,
-    #     sender_passphrase=alice_pass,
-    #     recipient_fingerprint=bob_key.fingerprint,
-    #     message="Hello, Bob!"
-    # )
-    
-    # # Decrypt
-    # decrypted = decrypt_message(encrypted, bob_pass)
-    # print(f"Decrypted: {decrypted}")
