@@ -1,0 +1,150 @@
+/* General application background with a dark theme */
+Screen {
+    background: #1a1a1a; /* Very dark gray for the background */
+    color: #e5e5e5;      /* Light gray for text */
+}
+
+/* Header styling */
+Header {
+    background: #121212; /* Slightly darker gray for the header */
+    color: #ff0015;      /* Neon cyan for the header text */
+    text-align: center;  /* Center align for text */
+    height: 3;           /* Fixed height for the header */
+    padding: 0 1;        /* Padding for spacing */
+}
+
+/* Title styling */
+#title {
+    color: #ff0015;      /* Neon cyan text */
+    text-align: center;  /* Align the title to the center */
+    margin: 1;           /* Add vertical spacing */
+    /* text-style: bold;    Make the title bold */
+}
+
+/* Footer styling */
+Footer {
+    background: #121212; /* Matches the header */
+    color: #ff0015;      /* Neon cyan footer text */
+    text-align: center;  /* Center align the text */
+    height: 1;           /* Fixed height for the footer */
+    padding: 0 1;        /* Padding for spacing */
+}
+
+/* Button styling */
+Button {
+    background: #333333;       /* Medium gray for button background */
+    color: #ff0015;            /* Neon cyan text */
+    border: round #ff0015;     /* Rounded border with neon cyan */
+    padding: 1 2;              /* Padding inside the button */
+    margin: 1;                 /* Space between buttons */
+}
+
+Button:hover {
+    background: #ff0015;       /* Neon cyan background on hover */
+    color: #1a1a1a;            /* Dark text for contrast */
+}
+
+Button:focus {
+    background: #00664d;       /* Darker teal when focused */
+    color: #ffffff;            /* White text */
+}
+
+/* TextArea styling */
+TextArea {
+    background: #262626;       
+    color: #e5e5e5;            
+    border: solid #ff0015;     
+    padding: 1;
+    margin: 1;       
+    height: 5;              
+    overflow-y: auto;
+}
+
+#output {
+    background: #262626;       /* Slightly lighter dark gray */
+    color: #e5e5e5;            /* Light gray text */
+    border: solid #ff0015;     /* Neon cyan border */
+    padding: 1;                /* Add inner padding for readability */
+    height: 8;              /* Automatically adjust height */
+    overflow-y: auto;
+}
+
+/* Input field styling for all input fields */
+Input {
+    background: #262626;       /* Slightly lighter dark gray background */
+    color: #e5e5e5;            /* Light gray text color */
+    border: solid #ff0015;     /* Neon cyan border */
+    padding: 1;                /* Inner padding for user input */
+    margin: 1;                 /* Space between inputs */
+    height: auto;              /* Auto height for content */
+}
+
+/* Specific styling for each Input field by ID */
+#keygen-email-input {
+    border: round #ff0015;     /* Rounded neon cyan border */
+}
+
+#keygen-pass-input {
+    border: round #ff0015;     /* Rounded neon cyan border */
+    background: #1a1a1a;       /* Slightly darker background for security */
+}
+
+#encrypt-sender-input {
+    border: solid #ff0015;
+}
+
+#encrypt-send-pass-input {
+    border: solid #ff0015;
+    background: #1a1a1a;       /* Darker background for sensitive passphrases */
+}
+
+#encrypt-recip-input {
+    border: dashed #ff0015;
+}
+
+#encrypt-message-input {
+    border: solid #ff0015;
+}
+
+#decrypt-message-input {
+    border: dashed #ff0015;
+}
+
+#decrypt-pass-input {
+    border: solid #ff0015;
+    background: #1a1a1a;       /* Darker background for private key passphrases */
+}
+
+/* Label styling */
+Label {
+    color: #e5e5e5;            /* Light gray text for labels */
+    margin: 1 0;               /* Add spacing between labels */
+    text-align: left;          /* Align label text to the left */
+}
+
+/* Buttons Container Styling */
+.buttons-row {
+    height: auto;              /* Adjust height to fit buttons */
+    margin: 1;                 /* Add spacing around the buttons row */
+    width: 100%;               /* Expand to full width */
+    /* justify-content: space-evenly; Evenly space the buttons */
+}
+
+/* Button Styling */
+Button {
+    background: #333333;       /* Medium gray for button background */
+    color: #ff0015;            /* Neon cyan text */
+    border: round #ff0015;     /* Rounded border with neon cyan */
+    padding: 1 2;              /* Padding inside the button */
+    margin: 0 1;               /* Horizontal spacing between buttons */
+}
+
+Button:hover {
+    background: #ff0015;       /* Neon cyan background on hover */
+    color: #1a1a1a;            /* Dark text for contrast */
+}
+
+Button:focus {
+    background: #00664d;       /* Darker teal when focused */
+    color: #ffffff;            /* White text */
+}
