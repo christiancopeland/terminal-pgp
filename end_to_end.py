@@ -3,6 +3,9 @@ import getpass
 import os
 import logging
 from io import StringIO
+import socket 
+import threading
+
 from textual.app import App, ComposeResult
 from textual.widgets import Button, Header, Footer, Input, Label, TextArea
 from textual.reactive import reactive
@@ -20,11 +23,171 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)  # Create a logger instance
 
+class PGPChatServer:
+    def __init__(self, host: str, port: int, app=None):
+        self.host = host 
+        self.port = port 
+        self.server_socket = None 
+        self.clients = []
+        self.room_names = []
+        self.app = app
+        logger.debug(f"PGPChatServer initialized on host {self.host} and port {self.port}")
+
+    def start_server(self):
+        logger.info("Attempting to start the PGP chat server.")
+        self.server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        try:
+            self.server_socket.bind((self.host, self.port))
+            self.server_socket.listen()
+            logger.info(f"Server is listening on {self.host}:{self.port}")
+        except Exception as e:
+            logger.error(f"Failed to bind/listen on {self.host}:{self.port}: {e}")
+            return
+
+        while True:
+            try:
+                client_socket, address = self.server_socket.accept()
+                logger.info(f"Accepted connection from {address}")
+                self.clients.append(client_socket)
+                logger.info(f"Current clients: {[c.getpeername() for c in self.clients if c]}")
+
+                client_handler = threading.Thread(
+                    target=self.handle_client,
+                    args=(client_socket,)
+                )
+                client_handler.start()
+                logger.debug(f"Client handler thread started for {address}")
+            except Exception as e:
+                logger.error(f"Error in start_server():\n{e}\n")
+    
+    def start_server_in_thread(room_name, port_number):
+        try:
+            server = PGPChatServer("192.168.1.218", port_number)
+            logger.info(f"Hosting room {room_name} on port {port_number}.")
+            server.start_server()
+        except KeyboardInterrupt:
+            exit(0)
+        except Exception as e:
+            logger.error(f"Error in start_server_in_thread():\n{e}\n")
+            exit(0)
+
+    def connect_to_server(self):
+        logger.info(f"Connecting to server at {self.host}:{self.port}")
+        try:
+            client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            client_socket.connect((self.host, self.port))
+            logger.info("Successfully connected to server.")
+
+            receiver_thread = threading.Thread(target=self.receive_messages, args=(client_socket,))
+            receiver_thread.start()
+            logger.debug("Receiver thread started.")
+
+            sender_thread = threading.Thread(target=self.send_messages, args=(client_socket,))
+            sender_thread.start()
+            logger.debug("Sender thread started.")
+        except Exception as e:
+            logger.error(f"Error in connect_to_server():\n{e}\n")
+
+    # NEED TO INTEGRATE INPUTS WITH TEXTUAL UI
+    def send_messages(self, client_socket):
+        logger.info("Sender thread running. Ready to send messages.")
+        while True:
+            try:
+                message = self.query_one("#chat-input-field", Input).value
+                #Encrypt before sending
+                logger.debug(f"Encrypting outgoing message: {message}")
+                encrypted_mesage = encrypt_and_sign_message(sender_email, passphrase, recipient_email, message)
+                client_socket.sendall(encrypted_message)
+                logger.info("Sent encrypted message to server.")
+                self.query_one("#chat-input-field", Input).value = ""
+            except Exception as e:
+                logger.error(f"Error in send_messages()\n{e}\n")
+                break
+    
+    def receive_messages(self, client_socket):
+        logger.info("Receiver thread running. Ready to receive messages.")
+        while True:
+            try:
+                message = client_socket.recv(1024)
+                logger.debug(f"Received raw message: {message}")
+                if not message:
+                    logger.info("No message received. Closing receiver thread.")
+                    break
+
+                def update_ui():
+                    try:
+                        chat_container = self.app.query_one("#chat-container")
+                        chat_area = self.query_one("#chat-container").query_one(Vertical)
+                        chat_area.mount(Label("Received: " + str(message)))
+                        logger.info(f"Displayed incoming message: {message}")
+                    except Exception as e:
+                        logger.error(f"Error updating UI from receive_messages():\n{e}\n")
+
+                # This seems way off kilter. Seems un-sane. Look for better way of conditionally updating UI, if conditional updating is even necessary
+                if self.app:
+                    self.app.call_from_thread(update_ui)
+                else:
+                    logger.warning("No app reference in PGPChatServer; cannot update UI.")        
+            except Exception as e:
+                logger.error(f"Error in send_messages():\n{e}\n")
+                break
+        
+    def handle_client(self, client_socket):
+        address = None
+        try:
+            address = client_socket.getpeername()
+            logger.info(f"Started handler for client {address}")
+        except Exception:
+            logger.warning("Could not retrieve client address.")
+        while True:
+            try:
+                message = client_socket.recv(1024)
+                logger.debug(f"Received message from client {address}: {message}")
+                if not message:
+                    logger.info(f"Client {address} disconnected. Removing client.")
+                    self.remove_client(client_socket)
+                    break
+                logger.info(f"Broadcasting message from {address} to other clients.")
+                self.broadcast(message, client_socket)
+            except Exception as e:
+                logger.error(f"Error in handle_client(): \n{e}\n")
+                break
+
+    def broadcast(self, message, sender_socket):
+        logger.info(f"Broadcasting message to {len(self.clients) - 1} clients (excluding sender).")
+        for client_socket in self.clients:
+            if client_socket != sender_socket:
+                try:
+                    client_socket.sendall(message)
+                    logger.debug(f"Sent broadcast message to {client_socket.getpeername()}")
+                except Exception as e:
+                    logger.error(f"Failed to send message to {client_socket.getpeername()}: {e}")
+
+    def remove_client(self, client_socket):
+        try:
+            address =  client_socket.getpeername()
+        except Exception:
+            address = "<unknown>"
+        try:
+            self.clients.remove(client_socket)
+            client_socket.close()
+            logger.info(f"Removed and closed connection for client {address}. Remaining clients: {len(self.clients)}")
+        except Exception as e:
+            logger.error(f"Error removing client {address}: {e}")
+
+
+
 class PGPApp(App):
     """A Textual-based terminal front end for your PGP project."""
     CSS_PATH = "./styles.css"
     # Reactive attributes for tracking mode
     mode = reactive("output")
+    chat_active = reactive(False)
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.chat_client = None
+        self.server = None
 
     def compose(self) -> ComposeResult:
         """Compose the app layout."""
@@ -37,14 +200,26 @@ class PGPApp(App):
             Button("Delete Key", id="delete-key"),
             Button("Encrypt Message", id="encrypt"),
             Button("Decrypt Message", id="decrypt"),
+            Button("Host Room", id="host-room"),
+            Button("Connect to Room", id="connect-room"),
             id="buttons-container",
             classes="buttons-row",  # Add CSS class for styling
         )
         yield VerticalScroll(id="input-container")  # Dynamic container for inputs
+        yield VerticalScroll(id="chat-container", classes="chat-widget")
         yield TextArea(id="output", text="")
         yield Footer()
 
-    def check_modes(mode: str):
+    def watch_mode(self, mode: str):
+        """Update input fields dynamically when the mode is changed."""
+        logger.info(f"Switched mode to: {mode}")
+        self.check_modes(mode)
+
+    def check_modes(self, mode: str):
+        input_container = self.query_one("#input-container")
+        input_container.remove_children()
+        chat_container = self.query_one("#chat-container")
+        chat_container.remove_children()
         if mode == "generate-key":
             input_container.mount(Input(placeholder="Enter Email", id="keygen-email"))
             input_container.mount(Input(placeholder="Enter Passphrase", password=True, id="keygen-pass"))
@@ -68,16 +243,37 @@ class PGPApp(App):
             input_container.mount(Input(placeholder="Enter Current Passphrase", password=True, id="update-current-passphrase"))
             input_container.mount(Input(placeholder="Enter New Passphrase", password=True, id="update-passphrase"))
             input_container.mount(Button("Submit", id="submit-update-key"))
-        
-        input_container.refresh()
+        elif mode == "host-room":
+            input_container = self.query_one("#input-container")
+            input_container.remove_children()
+            input_container.mount(Input(placeholder="Room Name", id="room-name"))
+            input_container.mount(Input(placeholder="Port Number", id="port-number"))
+            input_container.mount(Button("Start Hosting", id="start-hosting"))
+        elif mode == "connect-room":
+            input_container = self.query_one("#input-container")
+            input_container.remove_children()
+            input_container.mount(Input(placeholder="Host IP", id="host-ip"))
+            input_container.mount(Input(placeholder="Port Number", id="port-number-connect"))
+            input_container.mount(Button("Join Room", id="join-room"))
+        elif mode == "start-hosting" or mode == "join-room":
+            # Show chat UI
+            chat_container = self.query_one("#chat-container")
+            chat_container.remove_children()
+            chat_container.mount(Label("Chat Area"))
 
-    def watch_mode(self, mode: str):
-        """Update input fields dynamically when the mode is changed."""
-        input_container = self.query_one("#input-container")
-        input_container.remove_children()
-        logger.info(f"Switched mode to: {mode}")
-        self.check_modes(mode)
-        
+            chat_area = Vertical(classes="chat-messages")
+            chat_container.mount(chat_area)
+
+            input_field = Input(classes="chat-input", id="chat-input-field", placeholder="Type your message here")
+            chat_container.mount(input_field)
+
+            send_btn = Button("Send", id="send-message-btn", classes="send-btn")
+            close_btn = Button("Close Chat", id="close-chat-btn", classes="close-chat-btn")
+            chat_container.mount(Horizontal(send_btn, close_btn))
+
+        input_container.refresh()
+        chat_container.refresh()
+       
 
     async def case_match_buttons(self, event: Button.Pressed):
         match event.button.id:
@@ -91,6 +287,40 @@ class PGPApp(App):
                 self.mode = "delete-key"
             case "update-key":
                 self.mode = "update-key"
+            case "host-room":
+                self.mode = "host-room"
+            case "connect-room":
+                self.mode = "connect-room"
+            case "join-room":
+                host_ip = self.query_one("#host-ip", Input).value
+                port_number = int(self.query_one("#port-number-connect", Input).value)
+                # Establish client connection in separate thread
+                logger.info(f"Starting client thread. Connecting to {host_ip}:{port_number}")
+                self.chat_client = PGPChatServer(host_ip, port_number, app=self)
+                client_thread = threading.Thread(target=self.chat_client.connect_to_server, args=(host_ip, port_number))
+                client_thread.start()
+                self.mode = "join-room"
+            case "start-hosting":
+                room_name = self.query_one("#room-name", Input).value
+                port_number = int(self.query_one("#port-number", Input).value)
+                # Run server in background thread
+                logger.info(f"Starting room {room_name}")
+                self.server = PGPChatServer("192.168.1.218", port_number, app=self)
+                server_thread = threading.Thread(target=self.server.start_server_in_thread, args=(room_name, port_number))
+                server_thread.daemon = True
+                server_thread.start()
+                self.mode = "start-hosting"
+            case "send-message-btn":
+                message = self.query_one("#chat-input-field", Input).value
+                # This is where we encrypt and send using P2P logic
+                chat_container = self.query_one("#chat-container")
+                chat_area = chat_container.query_one(Vertical)
+                chat_area.mount(Label(message))
+                self.query_one("#chat-input-field", Input).value = ""
+            case "close-chat-btn":
+                chat_container = self.query_one("#chat-container")
+                chat_container.remove_children()
+                self.mode = "output"
             case "list-keys":
                 self.query_one("#output", TextArea).text = "Fetching keys..."
                 await self.handle_list_keys()

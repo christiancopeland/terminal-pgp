@@ -148,3 +148,51 @@ Button:focus {
     background: #00664d;       /* Darker teal when focused */
     color: #ffffff;            /* White text */
 }
+
+
+/***** Chat Styling *****/
+.chat-widget {
+    background: #121212;       /* Darker gray background for chat area */
+    padding: 1;                /* Inner padding */
+    border: solid #ff0015;     /* Neon cyan border */
+    width: 100%;               /* Full width */
+    height: 40%;               /* Adjust height */
+}
+
+.chat-messages {
+    background: #262626;       /* Slightly lighter dark gray */
+    color: #e5e5e5;            /* Light gray text color */
+    padding: 1;                /* Inner padding */
+    height: auto;              /* Adjust height to content */
+    overflow-y: auto;           /* Scrollable */
+    border: solid #ff0015;     /* Neon cyan border */
+}
+
+.chat-input {
+    background: #1a1a1a;       /* Darker background for input */
+    color: #e5e5e5;            /* Light gray text */
+    border: solid #ff0015;     /* Neon cyan border */
+    padding: 1;                /* Inner padding */
+    margin: 1;                 /* Space between input and other elements */
+    width: auto;               /* Adjust width */
+    height: auto;              /* Auto height */
+}
+
+.send-btn {
+    background: #333333;       /* Medium gray for button background */
+    color: #ff0015;            /* Neon cyan text */
+    border: round #ff0015;     /* Rounded border with neon cyan */
+    padding: 0 2;              /* Less padding for a smaller button */
+    margin: 0 1;               /* Horizontal spacing */
+    height: auto;              /* Adjust height */
+}
+
+.close-chat-btn {
+    background: #ff0015;       /* Neon cyan background for visibility */
+    color: #1a1a1a;            /* Dark text for contrast */
+    border: solid #1a1a1a;     /* Dark border for contrast */
+    padding: 0 2;              /* Less padding for a smaller button */
+    margin: 0 1;               /* Horizontal spacing */
+    height: auto;              /* Adjust height */
+}
+/**********************/
