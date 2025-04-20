@@ -210,6 +210,7 @@ If you want to contribute to this project, consider implementing any of the sugg
 - **Key Generation Errors**: Ensure GnuPG is installed correctly and verify that you have adequate permissions to write to the PGP key directory.
 - **Connection Issues**: Check that both clients are connecting to the same host and port. Use `127.0.0.1` for local testing.
 - **Decryption Failures**: Verify that recipients have their private keys loaded and the correct passphrase is being used.
+- **Other Unmentioned Errors**: Application logs will be stored in a ```pgp_log``` file. Be sure to check it if you run into any errors, it will help in tracking down any caught exceptions
 
 ## Acknowledgments
 
