@@ -1,181 +1,221 @@
-# **PGP Encryption Tool with Hydroxide Integration**
+# terminal-pgp
 
-## **Overview**
-This project is a terminal-based **PGP encryption tool** built using Python with the [Textual](https://github.com/Textualize/textual) framework. It uses GPG (GnuPG) for PGP encryption, decryption, key management, and securely encrypting and decrypting messages. We've integrated **Hydroxide** to enable seamless sending of encrypted emails through **ProtonMail** without requiring ProtonMail's paid Bridge software.
+A secure, terminal-based chat application that uses PGP (Pretty Good Privacy) encryption for end-to-end encrypted communication. This application allows users to create secure chat rooms, generate PGP key pairs, and exchange encrypted messages with confidence.
 
-The application provides a user-friendly interface for generating PGP key pairs, managing keys, encrypting/decrypting text, and sending encrypted emails using ProtonMail or your local SMTP server. Hydroxide facilitates local proxying for ProtonMail's encryption, ensuring privacy and security.
+## Tech Stack
 
----
+- **Textual**: Terminal UI framework for creating the interactive interface
+- **python-gnupg**: Python wrapper for GnuPG (GNU Privacy Guard)
+- **Socket Programming**: For network communication between clients and servers
+- **Threading**: For handling multiple connections simultaneously
+- **JSON**: For structured data exchange between clients and server
 
-## **Features**
-NOTE: Email functionality is not fully implemented yet. This is only useful for managing keys, and encrypting/decrypting messages currently. ALSO, this README was AI generated. Submit any issues you encounter while using this and I will assist personally
-1. **PGP Key Management**:
-   - Generate PGP key pairs with email addresses and passphrases.
-   - List all public keys and their fingerprints.
-   - Delete and update existing keys.
-   - Update private key passphrases.
+## How It Works
 
-2. **Message Encryption and Decryption**:
-   - Encrypt plaintext messages using a recipient's public key.
-   - Sign messages with the sender's private key for authenticity.
-   - Decrypt encrypted messages using the sender’s private key and passphrase.
+### Architecture
 
-3. **Send Secure Emails**:
-   - Send encrypted emails via:
-     - **Hydroxide** for free ProtonMail integration.
-     - Custom SMTP servers (e.g., Gmail, SendGrid, or personal SMTP servers).
-   - Encrypt email bodies before sending.
-   - Support for email attachments (future enhancement).
+terminal-pgp uses a client-server architecture:
 
-4. **Hydroxide Integration**:
-   - Acts as a free open-source ProtonMail Bridge replacement.
-   - Enables local SMTP/IMAP for ProtonMail accounts for both sending and receiving encrypted messages.
+1. **Server Component**: Handles room hosting, client connections, and message broadcasting
+2. **Client Component**: Manages user connections to rooms and handles message encryption/decryption
+3. **UI Component**: Terminal-based interface built with Textual
 
-5. **Logging**:
-   - Logs all operations (e.g., key generation, encryption, decryption, email sending) to a file for debugging.
+### Encryption Workflow
 
----
+1. **Key Generation**: Users generate PGP key pairs (public/private keys)
+2. **Authentication**: Users login with their email and passphrase
+3. **Secure Communication**:
+   - Messages are encrypted with the recipient's public key
+   - Recipients decrypt messages using their private key and passphrase
+   - The application supports pairwise encryption for group chats (separate encryption for each recipient)
 
-## **Setup Instructions**
+### Message Flow
 
-### **Prerequisites**
-1. Python 3.9+ installed on your machine.
-2. GnuPG installed:
-   - For Ubuntu/Debian:
-     ```bash
-     sudo apt update
-     sudo apt install gnupg
-     ```
-   - For macOS:
-     ```bash
-     brew install gpg
-     ```
-3. Hydroxide installed for ProtonMail integration (if needed):
-   - Install with `Go`:
-     ```bash
-     git clone https://github.com/emersion/hydroxide.git
-     cd hydroxide
-     go build ./cmd/hydroxide
-     ```
-   - Authenticate and start Hydroxide:
-     ```bash
-     ./hydroxide auth 
-     ./hydroxide serve
-     ```
+1. A user types a message in the chat interface
+2. The message is encrypted with each recipient's public key, creating a bundle of ciphertexts
+3. This bundle is sent to the server
+4. The server broadcasts the bundle to all connected clients
+5. Each client attempts to decrypt their specific ciphertext using their private key
+6. Successfully decrypted messages are displayed in the chat UI
 
----
+## Setup and Usage
 
-### **Installation**
+### Prerequisites
+
+- Python 3.7 or higher
+- GnuPG installed on your system
+
+### Installation
+
 1. Clone the repository:
-   ```bash
-   git clone https://github.com/your-username/pgp-encryption-tool.git
-   cd pgp-encryption-tool
    ```
-2. Install Python dependencies:
-   ```bash
+   git clone [repository-url]
+   cd terminal-pgp
+   ```
+
+2. Install required dependencies:
+   ```
    pip install -r requirements.txt
    ```
-3. Ensure `styles.css` is in the same directory for styling.
 
----
+### Running the Application
 
-### **Usage**
+The application requires multiple terminal instances to demonstrate the chat functionality:
 
-1. **Run the Application**:
-   ```bash
-   python app.py
-   ```
-   The application opens in a terminal interface powered by Textual.
-
-2. **Features Overview**:
-   - **Generate Key Pair**:
-     - Enter your email and passphrase to create a PGP key pair.
-     - The key is saved in the `.pgp_keys` directory.
-   - **List Keys**:
-     - Displays all public keys and fingerprints in the keyring.
-   - **Encrypt Message**:
-     - Provide the sender's email, passphrase, recipient's email, and plaintext message.
-     - The tool encrypts and optionally signs the message.
-   - **Decrypt Message**:
-     - Enter the encrypted message and the private key’s passphrase to reveal the plaintext.
-   - **Update/Delete Keys**:
-     - Modify or remove keys using fingerprints.
-
-3. **Sending Emails**:
-   - Relay emails through **Hydroxide** or a custom SMTP server:
-     - **Hydroxide**:
-       Ensure Hydroxide is running:
-       ```bash
-       ./hydroxide serve
-       ```
-       Set SMTP as:
-       ```plaintext
-       Host: 127.0.0.1
-       Port: 1025
-       ```
-     - **Custom SMTP Server**:
-       Provide the SMTP host, port, username, and password in the app.
-
----
-
-## **Hydroxide Setup for ProtonMail**
-Hydroxide is an open-source tool that acts as a free replacement for ProtonMail Bridge. It provides local IMAP/SMTP access to ProtonMail. Here's a more in-depth guide:
-
-1. **Install and Build Hydroxide**:
-   ```bash
-   git clone https://github.com/emersion/hydroxide.git
-   cd hydroxide
-   go build ./cmd/hydroxide
-   ```
-2. **Authenticate ProtonMail**:
-   Run the following command and log in with your ProtonMail credentials:
-   ```bash
-   ./hydroxide auth 
-   ```
-3. **Run Hydroxide in Background**:
-   Start Hydroxide in server mode:
-   ```bash
-   ./hydroxide serve
-   ```
-   This sets up:
-   - **SMTP**: `127.0.0.1:1025`
-   - **IMAP**: `127.0.0.1:1143`
-
-4. **Using Hydroxide in the Script**:
-   Update the app’s SMTP configuration to:
-   ```plaintext
-   SMTP Host: 127.0.0.1
-   SMTP Port: 1025
-   Username: 
-   Password: 
-   ```
-
-Example email-sending function:
-```python
-with smtplib.SMTP("127.0.0.1", 1025) as server:
-    server.login(sender_email, "hydroxide_generated_password")
-    server.send_message(msg)
+#### Terminal 1 - First User
+```bash
+python app.py
 ```
 
+1. Generate a key pair (Button: "Generate Key Pair")
+   - Enter your email and a secure passphrase
+   - Note the fingerprint displayed in the output
+
+2. Login with your credentials (Button: "Login")
+   - Enter the email and passphrase used in key generation
+
+3. Host a chat room (Button: "Host Room")
+   - Enter a room name
+   - Specify a port number (e.g., 8000)
+
+#### Terminal 2 - Second User
+```bash
+python app.py
+```
+
+1. Generate another key pair with different credentials
+2. Login with the second set of credentials
+3. Connect to the hosted room (Button: "Connect to Room")
+   - Enter "127.0.0.1" as the Host IP
+   - Enter the port number matching the hosted room
+
+### Typical Usage Flow
+
+1. Generate key pairs for all users
+2. Login with user credentials
+3. One user hosts a room
+4. Other users connect to the room
+5. Exchange encrypted messages
+6. Close the chat when finished
+
+## Core Features
+
+- **Key Management**: Generate, list, update, and delete PGP key pairs
+- **Secure Messaging**: End-to-end encrypted communication
+- **Room Hosting**: Create private chat rooms
+- **Group Chat**: Support for multiple users with pairwise encryption
+- **Terminal UI**: Clean, intuitive interface for all operations
+
+## Extending the Project
+
+### Potential Improvements
+
+1. **User Authentication Enhancement**
+   - Implement a more robust authentication system
+   - Add support for key verification and trust levels
+
+2. **Persistent Storage**
+   - Add message history with encrypted local storage
+   - Support for exporting/importing encrypted conversation logs
+
+3. **UI Enhancements**
+   - File transfer capabilities
+   - Emoji support
+   - Markdown rendering for formatted messages
+
+4. **Network Improvements**
+   - Support for NAT traversal to enable connections across networks
+   - Implement WebSocket support for web client compatibility
+   - Add relay servers for improved connectivity
+
+5. **Security Enhancements**
+   - Perfect forward secrecy implementation
+   - Key rotation mechanisms
+   - Support for multiple encryption algorithms
+
+6. **Usability Features**
+   - Contact management system
+   - Notifications for new messages
+   - Status indicators (online, typing, etc.)
+
+### Implementation Ideas
+
+1. **Web Interface**
+   ```python
+   # Example of adding a Flask web interface
+   from flask import Flask, render_template
+   
+   app = Flask(__name__)
+   
+   @app.route('/')
+   def index():
+       return render_template('chat.html')
+   
+   # Implement WebSocket for real-time communication
+   ```
+
+2. **Adding File Transfer**
+
+To enhance the application with file transfer capabilities, you can extend the `PGPChatClient` class:
+
+```python
+# Add to PGPChatClient class
+def send_file(self, filepath, recipient):
+    with open(filepath, 'rb') as file:
+        content = file.read()
+        encrypted = encrypt_and_sign_message(
+            self.app.user_email,
+            self.app.user_passphrase,
+            recipient,
+            content
+        )
+        file_bundle = {
+            "type": "file",
+            "filename": os.path.basename(filepath),
+            "sender": self.app.user_email,
+            "content": encrypted
+        }
+        self.client_socket.sendall(json.dumps(file_bundle).encode("utf-8"))
+```
+
+3. **Message Persistence**
+
+To add chat message persistence, you can extend the `PGPApp` class to encrypt and save chat logs locally:
+
+```python
+# Add to PGPApp class
+def save_chat_history(self, room_name):
+    chat_messages = [msg.text for msg in self.query_one(".chat-messages").children]
+    encrypted = encrypt_and_sign_message(
+        self.user_email,
+        self.user_passphrase,
+        self.user_email,  # Encrypt to self
+        json.dumps(chat_messages).encode("utf-8")  # Ensure bytes are used
+    )
+    with open(f"{room_name}_history.gpg", "wb") as history_file:
+        history_file.write(encrypted.data)
+```
+
+## Contribution
+
+If you want to contribute to this project, consider implementing any of the suggested enhancements. Here's a step-by-step process for contributing:
+
+1. **Fork the Repository**: Fork this project to your own GitHub account.
+2. **Make Changes**: Implement new features or fix bugs in your fork.
+3. **Create a PR**: Submit a pull request to the original repository with a descriptive title and comment explaining your changes.
+4. **Review Process**: The PR will go through a review process before it is merged.
+
+## Troubleshooting
+
+- **Key Generation Errors**: Ensure GnuPG is installed correctly and verify that you have adequate permissions to write to the PGP key directory.
+- **Connection Issues**: Check that both clients are connecting to the same host and port. Use `127.0.0.1` for local testing.
+- **Decryption Failures**: Verify that recipients have their private keys loaded and the correct passphrase is being used.
+
+## Acknowledgments
+
+- This project uses [python-gnupg](https://pypi.org/project/python-gnupg/) for PGP encryption and [Textual](https://textual.textualize.io/) for the terminal UI.
+
 ---
 
-## **Example Scenarios**
-Here are common use cases for the tool:
+Feel free to reach out with questions or to discuss potential enhancements. Happy coding
 
-### **1. Secure Message Encryption**
-Use PGP to encrypt a plaintext message:
-1. Generate a key pair for yourself and import the recipient’s public key.
-2. Encrypt the message and send it to the recipient securely.
-3. The recipient decrypts the message using their private key.
-
-### **2. Send ProtonMail-Encrypted Emails**
-With Hydroxide running:
-1. Compose an email in the app.
-2. Relay emails through Hydroxide’s local SMTP.
-3. Email is encrypted client-side before being sent through ProtonMail.
-
-### **3. Key Lifecycle Management**
-- Periodically update private key passphrases.
-- Rotate keys by creating new ones and securely exporting/importing them.
-
----
