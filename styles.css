@@ -1,7 +1,11 @@
 /* General application background with a dark theme */
-Screen {
+/* Screen {
     background: #1a1a1a; /* Very dark gray for the background */
-    color: #e5e5e5;      /* Light gray for text */
+    /* color: #e5e5e5;      Light gray for text */
+/* } */
+Screen {
+    background: #121212;
+    color: #f2f2f2;
 }
 
 /* Header styling */
@@ -13,26 +17,40 @@ Header {
     padding: 0 1;        /* Padding for spacing */
 }
 
+Footer {
+    background: #121212; /* Slightly darker gray for the header */
+    color: #ff0015;      /* Neon cyan for the header text */
+    text-align: center;  /* Center align for text */
+    height: 1;           /* Fixed height for the header */
+    padding: 0 1;        /* Padding for spacing */
+}
+
 /* Title styling */
 #title {
     color: #ff0015;      /* Neon cyan text */
     text-align: center;  /* Align the title to the center */
     margin: 1;           /* Add vertical spacing */
-    /* text-style: bold;    Make the title bold */
+    text-style: bold;    /*Make the title bold */
+    border: round #ff0015;
+    background: #121212;
+    padding: 1;
 }
 
-/* Footer styling */
-Footer {
-    background: #121212; /* Matches the header */
-    color: #ff0015;      /* Neon cyan footer text */
-    text-align: center;  /* Center align the text */
-    height: 1;           /* Fixed height for the footer */
-    padding: 0 1;        /* Padding for spacing */
-}
+/* #title {
+    color: #fff700;
+    text-style: bold;
+    text-align: center;
+    border: round #ff1bcb;
+    background: #222230;
+    padding: 1;
+    margin: 1 0;
+} */
+
+
 
 /* Button styling */
 Button {
-    background: #333333;       /* Medium gray for button background */
+    background: #121212;       /* Medium gray for button background */
     color: #ff0015;            /* Neon cyan text */
     border: round #ff0015;     /* Rounded border with neon cyan */
     padding: 1 2;              /* Padding inside the button */
@@ -40,18 +58,29 @@ Button {
 }
 
 Button:hover {
-    background: #ff0015;       /* Neon cyan background on hover */
-    color: #1a1a1a;            /* Dark text for contrast */
+    /* background: #ff0015;       
+    color: #111118;       */
+    border: double #ff0015;      
 }
 
 Button:focus {
-    background: #00664d;       /* Darker teal when focused */
+    background: #ff0015;       /* Darker teal when focused */
     color: #ffffff;            /* White text */
 }
 
+/* Buttons Container Styling */
+.buttons-row {
+    height: auto;              /* Adjust height to fit buttons */
+    margin: 1;                 /* Add spacing around the buttons row */
+    width: 100%;               /* Expand to full width */
+    align: left middle;
+}
+
+
+
 /* TextArea styling */
 TextArea {
-    background: #262626;       
+    background: #121212;       
     color: #e5e5e5;            
     border: solid #ff0015;     
     padding: 1;
@@ -61,23 +90,49 @@ TextArea {
 }
 
 #output {
-    background: #262626;       /* Slightly lighter dark gray */
-    color: #e5e5e5;            /* Light gray text */
-    border: solid #ff0015;     /* Neon cyan border */
-    padding: 1;                /* Add inner padding for readability */
-    height: 8;              /* Automatically adjust height */
+    width: 50%;      /* Adjust to complement chat width */
+    min-width: 30;
+    max-width: 100;
+    margin-right: 2;
+    height: 100%;
+    background: #121212;
     overflow-y: auto;
+    border: double #ff0015;
+    padding: 1;
+    
 }
+
+/* Label styling */
+Label {
+    color: #ff0015;            /* Light gray text for labels */
+    text-align: left;          /* Align label text to the left */
+    background: #121212;
+    border: round #ff0015;
+    /* padding: 0 1; */
+    /* margin: 1 0; */
+}
+
+
+.bottom-bar {
+    width: 100%;
+    height: 40%;     /* Adjust as desired */
+    margin-top: 1;
+    background: transparent;
+    /* layout: horizontal; */
+}
+
+
 
 /* Input field styling for all input fields */
 Input {
-    background: #262626;       /* Slightly lighter dark gray background */
+    background: #121212;       /* Slightly lighter dark gray background */
     color: #e5e5e5;            /* Light gray text color */
     border: solid #ff0015;     /* Neon cyan border */
     padding: 1;                /* Inner padding for user input */
     margin: 1;                 /* Space between inputs */
     height: auto;              /* Auto height for content */
 }
+
 
 /* Specific styling for each Input field by ID */
 #keygen-email-input {
@@ -115,84 +170,70 @@ Input {
     background: #1a1a1a;       /* Darker background for private key passphrases */
 }
 
-/* Label styling */
-Label {
-    color: #e5e5e5;            /* Light gray text for labels */
-    margin: 1 0;               /* Add spacing between labels */
-    text-align: left;          /* Align label text to the left */
-}
-
-/* Buttons Container Styling */
-.buttons-row {
-    height: auto;              /* Adjust height to fit buttons */
-    margin: 1;                 /* Add spacing around the buttons row */
-    width: 100%;               /* Expand to full width */
-    /* justify-content: space-evenly; Evenly space the buttons */
-}
-
-/* Button Styling */
-Button {
-    background: #333333;       /* Medium gray for button background */
-    color: #ff0015;            /* Neon cyan text */
-    border: round #ff0015;     /* Rounded border with neon cyan */
-    padding: 1 2;              /* Padding inside the button */
-    margin: 0 1;               /* Horizontal spacing between buttons */
-}
-
-Button:hover {
-    background: #ff0015;       /* Neon cyan background on hover */
-    color: #1a1a1a;            /* Dark text for contrast */
-}
-
-Button:focus {
-    background: #00664d;       /* Darker teal when focused */
-    color: #ffffff;            /* White text */
-}
-
-
 /***** Chat Styling *****/
 .chat-widget {
     background: #121212;       /* Darker gray background for chat area */
     padding: 1;                /* Inner padding */
     border: solid #ff0015;     /* Neon cyan border */
-    width: 100%;               /* Full width */
-    height: 40%;               /* Adjust height */
+    width: auto;               /* Full width */
+    /* height: auto;               Adjust height */
+    /* overflow-y: auto; */
+}
+
+#chat-container {
+    width: 50%;      /* Adjust as desired, e.g. 40% for chat, 60% for output */
+    min-width: 30;
+    width: 1fr;
+    max-width: 100;
+    height: 100%;
+    background: #121212;
+    overflow-y: auto;
+    border: double #ff0015;
+    padding: 1;
+    margin-right: 2;
+    margin-left: 2;
+    scrollbar-color: #111111;
+    
 }
 
 .chat-messages {
-    background: #262626;       /* Slightly lighter dark gray */
+    background: #121212;       /* Slightly lighter dark gray */
     color: #e5e5e5;            /* Light gray text color */
     padding: 1;                /* Inner padding */
-    height: auto;              /* Adjust height to content */
-    overflow-y: auto;           /* Scrollable */
+    height: auto;             
+    /* overflow-y: auto;            */
     border: solid #ff0015;     /* Neon cyan border */
 }
 
 .chat-input {
-    background: #1a1a1a;       /* Darker background for input */
+    background: #121212;       /* Darker background for input */
     color: #e5e5e5;            /* Light gray text */
     border: solid #ff0015;     /* Neon cyan border */
     padding: 1;                /* Inner padding */
-    margin: 1;                 /* Space between input and other elements */
+    margin: 1;                 
     width: auto;               /* Adjust width */
-    height: auto;              /* Auto height */
+    /* height: auto;              Auto height */
 }
 
 .send-btn {
-    background: #333333;       /* Medium gray for button background */
+    background: #121212;       /* Medium gray for button background */
     color: #ff0015;            /* Neon cyan text */
     border: round #ff0015;     /* Rounded border with neon cyan */
-    padding: 0 2;              /* Less padding for a smaller button */
-    margin: 0 1;               /* Horizontal spacing */
-    height: auto;              /* Adjust height */
+    padding: 1;              /* Less padding for a smaller button */
+    margin: 1;               /*Horizontal spacing
+    /* height: auto;              Adjust height */
 }
 
 .close-chat-btn {
-    background: #ff0015;       /* Neon cyan background for visibility */
-    color: #1a1a1a;            /* Dark text for contrast */
-    border: solid #1a1a1a;     /* Dark border for contrast */
-    padding: 0 2;              /* Less padding for a smaller button */
-    margin: 0 1;               /* Horizontal spacing */
-    height: auto;              /* Adjust height */
+    background: #121212;       
+    color: #ff0015;            
+    border: solid #ff0015;     
+    padding: 1;              
+    margin: 1;               
 }
 /**********************/
+
+.chat-buttons {
+    height: 100%;
+    overflow-y: auto;
+}
