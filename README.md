@@ -44,6 +44,9 @@ terminal-pgp uses a client-server architecture:
 
 - Python 3.7 or higher
 - GnuPG installed on your system
+- OpenSSL certificate for server
+   - Only working for local testing for now
+   - ```openssl req -x509 -newkey rsa:4096 -keyout server.key -out server.crt -days 365 -nodes -subj "/CN=localhost"```
 
 ### Installation
 
