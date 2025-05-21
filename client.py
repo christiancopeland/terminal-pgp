@@ -3,6 +3,7 @@ import socket
 import logging
 import json
 import gnupg
+import ssl
 
 from textual.containers import Vertical
 from textual.widgets import Input, Label
@@ -45,8 +46,14 @@ class PGPChatClient:
     def connect_to_server(self):
         logger.info(f"Connecting to server at {self.host}:{self.port}")
         try:
+            ## Attempting to implement secure sockets with TLS Certificates
+            context = ssl.create_default_context(ssl.Purpose.SERVER_AUTH)
+            context.check_hostname = False
+            context.verify_mode = ssl.CERT_NONE
             self.client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            self.client_socket.connect((self.host, self.port))
+            secure_socket = context.wrap_socket(self.client_socket, server_hostname=self.host)
+            secure_socket.connect((self.host, self.port))
+            self.client_socket = secure_socket
             logger.info("Successfully connected to server.")
             server_email = "server@chat.local"
             if self.app and hasattr(self.app, "user_email"):

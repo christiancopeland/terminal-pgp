@@ -2,7 +2,7 @@ import gnupg
 import getpass
 import os
 import logging
-from io import StringIO
+from io import StringIO, BytesIO
 import socket 
 import threading
 import json
@@ -196,6 +196,7 @@ class PGPApp(App):
 
     async def handle_login(self):
         email = self.query_one("#login-email", Input).value
+        # TODO: Use byte arrays instead of strings for passwords in order to reliably clear them from memory after use. 
         passphrase = self.query_one("#login-passphrase", Input).value
         # Validate: Key exists?
         keys = gpg.list_keys(secret=True)
@@ -275,6 +276,9 @@ class PGPApp(App):
         current_passphrase = self.query_one("#update-current-passphrase", Input).value
         new_passphrase = self.query_one("#update-passphrase", Input).value
         logger.info(f"Updating key passphrase for fingerprint: {fingerprint}")
+
+        if not new_passphrase: 
+            raise ValueError("Passphrase must be provided when generating keys, homie.")
 
         try:
             # Enable loopback for pinentry
@@ -419,13 +423,13 @@ class PGPApp(App):
                     )
                     ciphertexts[recipient_email] = encrypted
 
-                    bundle = {
+                bundle = {
                         "sender": self.user_email,
                         "ciphertexts": ciphertexts
                     }
-                    bundle_str = json.dumps(bundle)
+                bundle_str = json.dumps(bundle)
                 self.chat_client.client_socket.sendall(bundle_str.encode("utf-8"))
-                logger.info(f"Sent bundle to server for broadcast:\n{bundle_str.encode("utf-8")}\n")
+                logger.info(f"Sent bundle to server for broadcast:\n{bundle_str.encode('utf-8')}\n")
                     # --- PAIRWISE ENCRYPTION SEND ---
                 # OPTIONAL: encrypt here if desired
 
@@ -452,48 +456,6 @@ class PGPApp(App):
                     for email in members:
                         if email in uid:
                             self.chat_client.email_to_fp[email] = key["fingerprint"]
-
-
-# WORK IN PROGRESS, DEFINITELY DOES NOT WORK RIGHT NOW
-    async def handle_send_protonmail(self):
-        """Send an encrypted email via ProtonMail."""
-        sender_email = self.query_one("#sender-email", Input).value
-        sender_passphrase = self.query_one("#sender-passphrase", Input).value
-        recipient_email = self.query_one("#recipient-email", Input).value
-        message_body = self.query_one("#email-body", TextArea).text
-        subject = self.query_one("#email-subject", Input).value
-        smtp_server = "smtp.protonmail.com"  # ProtonMail SMTP server
-        smtp_port = 465  # For SSL/TLS communication
-
-        logger.info(f"Encrypting and sending an email from {sender_email} to {recipient_email}")
-
-        try:
-            # Encrypt the message using the recipient's public key
-            encrypted_data = gpg.encrypt(
-                message_body, recipient_email, sign=sender_email, passphrase=sender_passphrase
-            )
-            if not encrypted_data.ok:
-                raise Exception(f"Encryption failed: {encrypted_data.status}")
-
-            # Create the email
-            msg = EmailMessage()
-            msg["From"] = sender_email
-            msg["To"] = recipient_email
-            msg["Subject"] = subject
-            msg.set_content(str(encrypted_data))  # Encrypted message as content
-
-            # Send the email via ProtonMail SMTP
-            with smtplib.SMTP_SSL(smtp_server, smtp_port) as server:
-                server.login(sender_email, sender_passphrase)
-                server.send_message(msg)
-
-            logger.info(f"Encrypted email sent successfully to {recipient_email}")
-            self.query_one("#output", TextArea).text = f"Encrypted email sent successfully to {recipient_email}"
-
-        except Exception as e:
-            logger.error(f"Error sending encrypted email: {e}")
-            self.query_one("#output", TextArea).text = f"Error: {e}"
-
 
 
 if __name__ == '__main__':

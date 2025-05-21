@@ -2,7 +2,7 @@ import threading
 import socket 
 import logging
 import json
-
+import ssl
 
 
 # Setup the logger
@@ -36,6 +36,9 @@ class PGPChatServer:
 
     def start_server(self):
         logger.info("Attempting to start the PGP chat server.")
+        ## Attempting to implement secure sockets with TLS Certificates
+        context = ssl.create_default_context(ssl.Purpose.CLIENT_AUTH)
+        context.load_cert_chain(certfile="server.crt", keyfile="server.key")
         self.server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.server_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         try:
@@ -51,13 +54,14 @@ class PGPChatServer:
         while True:
             try:
                 client_socket, address = self.server_socket.accept()
+                secure_socket = context.wrap_socket(client_socket, server_side=True)
                 logger.info(f"Accepted connection from {address}")
-                self.clients.append(client_socket)
+                self.clients.append(secure_socket)
                 logger.info(f"Current clients: {[c.getpeername() for c in self.clients if c]}")
 
                 client_handler = threading.Thread(
                     target=self.handle_client,
-                    args=(client_socket,),
+                    args=(secure_socket,),
                     daemon=True
                 )
                 client_handler.start()
