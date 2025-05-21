@@ -39,6 +39,7 @@ class PGPChatServer:
         ## Attempting to implement secure sockets with TLS Certificates
         context = ssl.create_default_context(ssl.Purpose.CLIENT_AUTH)
         context.load_cert_chain(certfile="server.crt", keyfile="server.key")
+        context.set_ciphers('ECDHE+AESGCM')
         self.server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.server_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         try:

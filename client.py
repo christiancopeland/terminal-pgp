@@ -50,6 +50,7 @@ class PGPChatClient:
             context = ssl.create_default_context(ssl.Purpose.SERVER_AUTH)
             context.check_hostname = False
             context.verify_mode = ssl.CERT_NONE
+            context.set_ciphers('ECDHE+AESGCM')
             self.client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             secure_socket = context.wrap_socket(self.client_socket, server_hostname=self.host)
             secure_socket.connect((self.host, self.port))
