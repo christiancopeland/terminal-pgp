@@ -10,6 +10,31 @@ A secure, terminal-based chat application that uses PGP (Pretty Good Privacy) en
 - **Threading**: For handling multiple connections simultaneously
 - **JSON**: For structured data exchange between clients and server
 
+## Security Considerations
+
+### Threat Model
+
+This application is designed for:
+- **Protected:** Message content confidentiality using PGP encryption
+- **Protected:** Message authenticity and integrity via PGP signatures
+- **NOT Protected:** Metadata (who's talking to whom, message timing, room names)
+- **NOT Protected:** Against endpoint compromise (if attacker has your passphrase)
+
+### Known Limitations
+
+- **No Perfect Forward Secrecy:** Compromised private key exposes all past messages
+- **Metadata Leakage:** Server sees IP addresses, connection times, room names
+- **Trust on First Use:** No key verification mechanism (vulnerable to MITM during key exchange)
+- **Cleartext Passphrases in Memory:** Application holds passphrases in plaintext during session
+
+### Security Roadmap
+
+Planned improvements:
+- [ ] Implement Double Ratchet algorithm (Signal Protocol) for forward secrecy
+- [ ] Add key fingerprint verification UI
+- [ ] Ephemeral message support (auto-delete after reading)
+- [ ] Memory zeroization for sensitive data
+
 ## How It Works
 
 ### Architecture
